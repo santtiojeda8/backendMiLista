@@ -1,0 +1,16 @@
+Bueno, primero vamos a definir que es JWT.
+JWT es un estandár abierto para transimitir información de forma segura y compacta mediante un JSON firmado digitalmente
+
+Un JWT este dividido en 3 partes:
+1. HEADER: Indica el tipo de token (JWT) y el algoritmo de criptografía usado para firmarlo (como HS256)
+2. PAYLOAD: Contiene los datos o "claims" (reclamaciones) como la identidad del usuario y sus permisos. No está cifrado,
+solo codificado, por lo que es mejor no guardar en el o enviar datos sensibles como contraseñas.
+3. SIGNATURE (Firma): Se crea combinando el header, el payload y una clave secreta del servidor. Sirve para comprobar
+que el mensaje no fue modificado en el camino.
+
+¿PARA QUE SE USA?
+Autenticación: Permite que un usuario al iniciar sesión reciba un token. Ese token se usa para validar la identidad del
+usuario sin necesidad de estar consultando constantemente la base de datos
+
+Intercambio seguro de datos: Garantiza que la información enviada es auténtica y no ha sido alterada por terceros.
+
