@@ -1,5 +1,8 @@
 Bueno, primero vamos a definir que es JWT.
-JWT es un estandár abierto para transimitir información de forma segura y compacta mediante un JSON firmado digitalmente
+JWT es un estandár abierto para transimitir información de forma segura y compacta mediante un JSON firmado digitalmente.
+JWT es una estrategia Stateless (sin estado). Esto quiere decir que el servidor no guarda en memoria la sesion del usuario. En su lugar el JWT crea un token que le entrega al cliente. Cada vez que el cliente
+quiere realizar una accion o quiere interactuar con la API, le muestra este token entregado. Ejemplo: Imagina que tu aplicación actual es un edificio con oficinas protegidas. Hasta ahora, las puertas estaban
+abiertas. Al meter JWT (JSON Web Tokens), estamos poniendo un guardia en la recepción que entrega un pase digital (el token), y cerraduras electrónicas en cada oficina (Controllers).
 
 Un JWT este dividido en 3 partes:
 1. HEADER: Indica el tipo de token (JWT) y el algoritmo de criptografía usado para firmarlo (como HS256)
@@ -10,7 +13,105 @@ que el mensaje no fue modificado en el camino.
 
 ¿PARA QUE SE USA?
 Autenticación: Permite que un usuario al iniciar sesión reciba un token. Ese token se usa para validar la identidad del
-usuario sin necesidad de estar consultando constantemente la base de datos
+usuario sin necesidad de mantener abierta una conexión con la base de datos que nos permita tener abierta la sesion del usuario.
 
 Intercambio seguro de datos: Garantiza que la información enviada es auténtica y no ha sido alterada por terceros.
 
+¿COMO SE IMPLEMENTA?
+Vamos a ir capa por capa viendo como se implementa.
+
+1. CAPA DE TRANSPORTE: LOS DTO's (El contrato de comunicación)
+Primero debemos definir como nos vamos a comunicar con el cliente, que nos va enviar y que le vamos a responder.
+--> LoginRequestDTO: Es una clase que vamos a usar para mapear los datos que envia el usuario en el JSON para loguearse. Ej: { "username" : "Santiago", "password": "Santi123" }
+--> AuthResponseDTO: Es una clase que vamos a usar para devolver el token generado una vez que el login se realizo correctamente. Solo se encarga de enviar un String con el JWT.
+
+2. CAPA DE DATOS: ENTITY Y REPOSITORY (Identificar al usuario)
+Spring Boot incluye un motor de seguridad (Spring Security), el cual se encarga de gestionar de manera centralizada la autenticación, la autorización y la protección contra vulnerabilidades de la
+aplicación mediante una cadena de filtros configurables.
+Para que ese motor de seguridad entienda nuestra base de datos, la entidad usuario (users) tiene que hablar su mismo "idioma".
+--> ¿Que cambia en nuestra entidad Users?: Nuestra clase ahora debe implementar la interfaz UserDetails. Esta interfaz obligamos a la entidad a implementar métodos específicos para que el motor de
+seguridad le "pregunté" a el objeto lo que necesita saber. A través de esta interfaz tambien le indicamos como llamamos a nuestro campo de contraseña o usuario.
+--> ¿Qué cambia en nuestro repositorio UserRepository?: En el repositor debemos agregar el metodo Optional<User> findByEmail(String email). ¿Por qué? Porque al iniciar sesión el usuario, nosotros debemos buscar
+que ese usuario exista. Además Spring Security usa esta consulta para traer al usuario, si lo encuentra toma el control de la seguridad, comprueba que la contraseña coincida y genera el token JWT.
+
+3. CAPA DE LÓGICA: LOS SERVICIOS (El cerebro de la operación)
+Aqui dividimos las responsabilidades en tres actores:
+--> UserDetailService (Servicio de Spring Security): Es un servicio obligatorio que requiere Spring. Su única funcionalidad es buscar un usuario en la base de datos. Si lo encuentra devuelve el objeto;
+si no, lanza un error.
+--> JWTService (Creador y Validador de Tokens): Este servicio se encarga de contruir el JWT, firmandolo con una clave secreta que indicamos nosotros y poniendole un tiempo de expiración, e incluye funciones
+para desarmar el token cuando viene de regreso, verificando que no haya expirado y extrayendo el email (o nombre) del usuario.
+--> AuthService (El Orquestador): Aquí es donde ocurre el Login. Recibe el LoginRequestDTO, utiliza un componente de Spring llamado AuthenticationManager para comprobar si la contraseña que mandó el usuario
+coincide con la almacenada en la base de datos (encriptada) y, si todo está bien, le pide al JWTService que genere un token y se lo devuelve al usuario.
+
+4. CAPA DE SEGURIDAD: EL FILTRO Y LA CONFIGURACIÓN (El guardián):
+Esto es el núcleo de JWT.
+--> JWTAuthenticationFilter (El filtro Interceptor): Este filtro es la aduana o la seguridad en la entrada de la API, todas las peticiones HTTP pasan por aquí antes de llegar al controlador.
+La única misión de este filtro es revisar si la petición http traen un token válido.
+    _¿Como funciona? Revisa si la petición trae una cabecera llamada Authorization que empiece por la palabra Bearer. Si no la trae, deja pasar la petición pero sin permisos. Sin embargo, si la trae,
+    extrae el token, le pide a JwtService que lo valide y, si es correcto, le dice a Spring Security: "Este usuario esta verificado y es real, guárdalo en el contexto de seguridad por el resto de esta petición".
+
+--> SecurityConfig (Las reglas del edificio): Es una clase normal de Java que lleva las anotaciones @Configuration y @EnableWebSecurity. Esta clase se usa para configurar lo siguiente.
+    _Ruta Publica vs. Protegida: Define que URLs puede ver cualquiera sin token (como /api/auth/login) y cuáles requieren estar autenticado (como /api/productos/**).
+    _Desactivar el Estado: Le indicamos a Spring Security que no guarde sesiones en memoria (con SessionCreationPolicy.STATELESS), ya que usarás JWT.
+    _Inyectar nuevos filtros: Le podemos indicar al motor "Oye, añade mi JwtAuthenticationFilter en la cadena de filtros antes de los filtros por defecto".
+    _Cifrado de contraseñas: Podemos definir aquí qué algoritmo usar para proteger las contraseñas. Por lo general se usa BCryptPasswordEncoder.
+
+5. CAPA DE EXPOSICIÓN: CONTROLLER (La ventanilla):
+--> AuthController: Creamos este nuevo controlador que tendrá un único endpoint público, ejemplo: POST /api/auth/login. Recibe el DTO con las credenciales, llama al AuthService y le entrega el token al usuario.
+--> Controladores Actuales: A nuestros controladores actuales que ya estan armados no vamos a hacerle nada. Esto es porque al haber configurado ya SpringConfig, Spring Boot automáticamente portegerá los endpoints.
+Si se intenta hacer una consulta a un endpoint y no trae en la cabecera un token, el filtró lo detectará y devolverá un error 403 Forbidden inmediatamente, por lo que la petición no llega nunca a un controlador.
+
+
+Esa es la teoría que necesitamos saber para poder implementar JWT en nuestro proyecto. Ahora vamos a ir implementando paso a paso.
+
+1°_ Creamos el LoginRequestDto para poder mapear los datoas que vienen en el JSON a una entidad lista para poder trabajar.
+
+2°_ Hacemos los mismo con el AuthResponseDto y en este vamos a devolver el String con el JWT.
+
+3°_ Añadimos la dependencia de Spring Security a nuestro proyecto Spring. Sin esta dependencia no vamos a poder implementar la interfaz UserDetails, y tampoco vamos a poder implementar nada de JWT.
+
+4°_ Añadimos la dependencia de JWT a nuestro proyecto.Esta no viene por defecto en Spring, así que tenemos que añadir la librería JJWT. De esta librería/API vamos a usar as interfaces, la implementación (el motor que hace los cálculos) y el serializador ( para convertir objetos a JSON dentro del token usando Jackson).
+
+5°_ Implementamos en nuestra entida User la interfaz UserDetails. Con la implementación debemos incorporar a la clase unos métodos obligatorios que vamos a usar para configurar nuestra entidad.
+
+6°_ Configuramos los métodos implementados en User segun lo que necesitemos que devuelva.
+
+7°_ Creamos el JwtService que se va a encargar de crear los tokens y de validarlos.
+
+7.1°_ Lo primero que creamos en el JwtService es la clave secreta. Para un HS256 tenemos que definir una clave secreta como String y debe contener 32 carácteres o más.
+
+7.2°_ Segundo, creamos un metodo llamado generarKey que va a devolver un objeto tipo SecretKey. Este metodo va a implementar otro metodo reservado (Keys.hmacShaKeyFor(SecretKey.getBytes(StandardCharsets.UTF_8))) que se va a encargar de crear una clave criptográfica que vamos a usar para validar y firmar los tokens JWT.
+
+7.3°_ Tercero, creamos el metodo encargado de crear y formar el JWT(token). En este tenemos que indicar varias cosas y se divide en varias partes.1: invocamos el builder de la libreria para armar el token (Jwts.builder()), 2: le indicamos con que dato vamos a identificar al usuario ( .subject(email) ), 3: le indicamos la clave que va a usar para firmar el token ( .signWith(generarKey() ), 4: le indicamos la fecha de creación del token ( .issuedAt(new Date() ), 5: le indicamos el tiempo de expiración, en nuestro caso, 10 minutos ( .expiration(new Date(System.currentTimeMillis() + 600000) ), 6: al final de la creación, tenemos que indicar el cierre y la creación del token ( .compact() ).
+
+7.4°_ Cuarto, creamos el metodo que se va a encargar de desarmar el token (va a leerlo y verificarlo) y de extraer los claims. En este metodo tenemos que indicar varias cosas nuevamente y se divide en varias partes.1: Iniciamos el motor de lectura de la libreria JWT ( Jwts.parser() ), 2: le pasamos al lector(parser) la clave secreta con la que firmamos los tokens ( .verifyWith(generarKey()) ), 3: construimos/ensamblamos el lector de tokens con la clave que le dimos antes ( .build() ), 4: ahora verificamos la firma, la expiracion del token que nos llega y, si todo esta bien, lo dividimos en sus partes ( .parseSignedClaims(token) ), 5: finalmente necesitamos extraer del token los claims o datos como lo son el email, rol, etc. (.getPayload).
+
+7.5°_ Quinto, creamos un metodo solo para extraer el email del usuario del token, o mejor dicho del Claims. Extraemos el subject del Claims que nos devuleve el metodo creado anteriormente. Como al crear el token le indicamos que el subject va a ser el email, vamos a extraer el email.
+
+7.6°_ Sexto, creamos un metodo que valide si el token aún es válido o no. Tiene que validar que no haya expirado y que el email que trae el token es el mismo que tiene el usuario en la base de datos. El metodo retorna un Boolean y se divide en 2 validaciones, 1: validamos que el token recibido sea igual al email de la DB ( extraerEmail(token).equals(emailUser) ), 2: validamos que la fecha del token no sea antes de la fecha actual, es decir que tiene que ser mayor o posterior a la fecha actual para ser valido el token ( ! extraerClaims(token).getExpiration().before(new Date()) ), 3: concatenamos ambas condiciones con un &&.
+(extraerEmail(token).equals(emailUser) && !extraerClaims(token).getExpiration().before(new Date()))
+
+8°_ Creamos la clase SecurityConfig para poder configurar la seguridad de nuestra API. Dentro de esta clase vamos a crear el @Bean de UserDetailsService para que utilice Spring para validar si el usuario que esta haciendo la petición existe realmente en la base de datos.
+
+9°_ Creamos el filtro que vamos a usar para filtrar las peticiones HTTP, para esto creamos la clase JwtAuthenticationFilter. En esta clase vamos a inyectar el el JwtService y eñ UserDetailsService. También vamos a definir la lógica del filtro mediante el metodo doFilterInternal(). Este filtro va a recibir 3 parámetros de distintos tipos que vamos a usar para manipular las peticiones HTTP, y estos son:
+    1. HttpServletRequest request: Es la petición que viene de la calle (del frontend). De aquí podemos extraer las cabeceras (headers), la URL a la que quiere ir el usuario o los datos que envía. El guardia usará este objeto para buscar la cabecera Authorization.
+    2. HttpServletResponse response: Es la respuesta que le enviaremos de vuelta al cliente. Si quisiéramos rechazar al usuario directamente en el filtro con un error personalizado, usaríamos este objeto.
+    3. FilterChain filterChain: Significa "Cadena de filtros". Imagina que la seguridad de Spring es una fila de 5 guardias en un pasillo. Tú eres el guardia número 1. Cuando termines de revisar al usuario y veas que todo está en orden, debes llamar a filterChain.doFilter(request, response); para decirle al usuario: "Pasa al siguiente guardia". Si no llamas a este método, la petición se quedará congelada ahí para siempre.
+
+9.1°_ Etapa 1: Revisar la mochila del visitante (La Cabecera HTTP):
+    Buscamos la cabecera Authorization en la petición. Si es nula o no empieza con "Bearer ", dejamos que la petición continúe con filterChain.doFilter() y cortamos con un return; porque el usuario no mandó ninguna credencial para analizar (va como anónimo).
+    Si pasa el control, recortamos los primeros 7 caracteres de la cabecera usando .substring(7) para aislar el token puro y tiramos la palabra "Bearer " a la basura.
+9.2°_ Etapa 2: Extraer el email y verificar el Contexto de Seguridad:
+    Le enviamos el token limpio a nuestro jwtService.extraerEmail(jwt) para saber a qué correo le pertenece ese pase digital.
+    Hacemos una doble verificación en un if: que hayamos obtenido un email válido Y que el usuario no esté ya autenticado en el sistema en este viaje (SecurityContextHolder.getContext().getAuthentication() == null).
+    Si el usuario no está registrado en el contexto, llamamos a userDetailsService.loadUserByUsername(email) para ir a buscar al usuario real a la base de datos y cargarlo en un objeto UserDetails.
+9.3°_ Etapa 3: Validar el Token y Dar el Pase Oficial:
+    Llamamos a nuestro metodo jwtService.esValidoElToken(jwt, userDetails.getUsername()).
+    Si el token es válido (no expiró y coincide el email), creamos un objeto oficial de Spring llamado UsernamePasswordAuthenticationToken, pasándole el usuario, sus roles y sus credenciales. Este objeto actúa como un "sello de aprobación".
+    Inyectamos este objeto aprobado dentro del contenedor de seguridad usando SecurityContextHolder.getContext().setAuthentication(authToken). De este modo, por el resto de la petición HTTP, la aplicación sabe exactamente quién es el usuario y qué permisos tiene.
+9.4°_ Cierre del Filtro:
+    Al final del metodo (fuera de las condiciones), llamamos siempre a filterChain.doFilter(request, response) para permitir que la petición viaje con éxito hacia los controladores que el cliente quería consultar.
+
+
+Problema: Spring Security busca en la DB el dato username, y yo no lo tengo ni en la DB ni en la entidad.
+Solución: el username se remplaza por el email. La documentación dice username pero nosotros vamos a validar por correo.
