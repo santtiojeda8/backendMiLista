@@ -91,27 +91,38 @@ Esa es la teoría que necesitamos saber para poder implementar JWT en nuestro pr
 7.6°_ Sexto, creamos un metodo que valide si el token aún es válido o no. Tiene que validar que no haya expirado y que el email que trae el token es el mismo que tiene el usuario en la base de datos. El metodo retorna un Boolean y se divide en 2 validaciones, 1: validamos que el token recibido sea igual al email de la DB ( extraerEmail(token).equals(emailUser) ), 2: validamos que la fecha del token no sea antes de la fecha actual, es decir que tiene que ser mayor o posterior a la fecha actual para ser valido el token ( ! extraerClaims(token).getExpiration().before(new Date()) ), 3: concatenamos ambas condiciones con un &&.
 (extraerEmail(token).equals(emailUser) && !extraerClaims(token).getExpiration().before(new Date()))
 
-8°_ Creamos la clase SecurityConfig para poder configurar la seguridad de nuestra API. Dentro de esta clase vamos a crear el @Bean de UserDetailsService para que utilice Spring para validar si el usuario que esta haciendo la petición existe realmente en la base de datos.
+8°_ Creamos la clase SecurityConfig para poder configurar la seguridad de nuestra API. Dentro de esta clase vamos a crear el @Bean de UserDetailsService para que utilice Spring para validar si el usuario que esta haciendo la petición existe realmente en la base de datos. A esta clase debemos agregarle 2 anotaciónes, una es @Configuration y la agregamos porque sino Spring Boot ignorará por completo este archivo y no va a cargar nuestras configuraciones. La otra anotación es @EnableWebSecurity, esta anotación va a desactivar la seguridad genérica de Spring Boot y va a activar nuestro sistema de seguridad personalizado.
 
 9°_ Creamos el filtro que vamos a usar para filtrar las peticiones HTTP, para esto creamos la clase JwtAuthenticationFilter. En esta clase vamos a inyectar el el JwtService y eñ UserDetailsService. También vamos a definir la lógica del filtro mediante el metodo doFilterInternal(). Este filtro va a recibir 3 parámetros de distintos tipos que vamos a usar para manipular las peticiones HTTP, y estos son:
     1. HttpServletRequest request: Es la petición que viene de la calle (del frontend). De aquí podemos extraer las cabeceras (headers), la URL a la que quiere ir el usuario o los datos que envía. El guardia usará este objeto para buscar la cabecera Authorization.
     2. HttpServletResponse response: Es la respuesta que le enviaremos de vuelta al cliente. Si quisiéramos rechazar al usuario directamente en el filtro con un error personalizado, usaríamos este objeto.
-    3. FilterChain filterChain: Significa "Cadena de filtros". Imagina que la seguridad de Spring es una fila de 5 guardias en un pasillo. Tú eres el guardia número 1. Cuando termines de revisar al usuario y veas que todo está en orden, debes llamar a filterChain.doFilter(request, response); para decirle al usuario: "Pasa al siguiente guardia". Si no llamas a este método, la petición se quedará congelada ahí para siempre.
+    3. FilterChain filterChain: Significa "Cadena de filtros". Imagina que la seguridad de Spring es una fila de 5 guardias en un pasillo. Tú eres el guardia número 1. Cuando termines de revisar al usuario y veas que todo está en orden, debemos llamar a filterChain.doFilter(request, response); para decirle al usuario: "Pasa al siguiente guardia". Si no llamas a este método, la petición se quedará congelada ahí para siempre.
 
 9.1°_ Etapa 1: Revisar la mochila del visitante (La Cabecera HTTP):
     Buscamos la cabecera Authorization en la petición. Si es nula o no empieza con "Bearer ", dejamos que la petición continúe con filterChain.doFilter() y cortamos con un return; porque el usuario no mandó ninguna credencial para analizar (va como anónimo).
     Si pasa el control, recortamos los primeros 7 caracteres de la cabecera usando .substring(7) para aislar el token puro y tiramos la palabra "Bearer " a la basura.
+
 9.2°_ Etapa 2: Extraer el email y verificar el Contexto de Seguridad:
     Le enviamos el token limpio a nuestro jwtService.extraerEmail(jwt) para saber a qué correo le pertenece ese pase digital.
-    Hacemos una doble verificación en un if: que hayamos obtenido un email válido Y que el usuario no esté ya autenticado en el sistema en este viaje (SecurityContextHolder.getContext().getAuthentication() == null).
+    Hacemos una doble verificación en un if( que hayamos obtenido un email válido Y que el usuario no esté ya autenticado en el sistema en este viaje) -> (SecurityContextHolder.getContext().getAuthentication() == null).
     Si el usuario no está registrado en el contexto, llamamos a userDetailsService.loadUserByUsername(email) para ir a buscar al usuario real a la base de datos y cargarlo en un objeto UserDetails.
+
 9.3°_ Etapa 3: Validar el Token y Dar el Pase Oficial:
     Llamamos a nuestro metodo jwtService.esValidoElToken(jwt, userDetails.getUsername()).
     Si el token es válido (no expiró y coincide el email), creamos un objeto oficial de Spring llamado UsernamePasswordAuthenticationToken, pasándole el usuario, sus roles y sus credenciales. Este objeto actúa como un "sello de aprobación".
     Inyectamos este objeto aprobado dentro del contenedor de seguridad usando SecurityContextHolder.getContext().setAuthentication(authToken). De este modo, por el resto de la petición HTTP, la aplicación sabe exactamente quién es el usuario y qué permisos tiene.
+
 9.4°_ Cierre del Filtro:
     Al final del metodo (fuera de las condiciones), llamamos siempre a filterChain.doFilter(request, response) para permitir que la petición viaje con éxito hacia los controladores que el cliente quería consultar.
+
+10°_ Volvemos al SecurityConfig para poder crear los metodos que nos van a permitir definir las rutas públicas y las privadas (securityFilterChain) y cifrar la contraseña del usuario, así no las guardamos como vienen en texto plano.
+
+10.1°_ Lo primero que vamos a implementar/crear es el metodo para cifrar las contraseñas. El nombre del metodo va a ser passwordEncoder y lo vamos a definir como un @Bean ya que posteriormente lo vamos a usar en el login porque necesitamos que se valide si la contraseña almacenada encriptada coincide con la que el usuario esta ingresando (la cual se hashea nuevamente para validar).
+
+
 
 
 Problema: Spring Security busca en la DB el dato username, y yo no lo tengo ni en la DB ni en la entidad.
 Solución: el username se remplaza por el email. La documentación dice username pero nosotros vamos a validar por correo.
+
+Problema: El metodo PasswordEncoder nose como funciona, porque en ningún momento recibe una contraseña pero devuelve un codificador, el de BCrypt.
