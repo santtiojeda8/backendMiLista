@@ -117,12 +117,29 @@ Esa es la teoría que necesitamos saber para poder implementar JWT en nuestro pr
 
 10°_ Volvemos al SecurityConfig para poder crear los metodos que nos van a permitir definir las rutas públicas y las privadas (securityFilterChain) y cifrar la contraseña del usuario, así no las guardamos como vienen en texto plano.
 
-10.1°_ Lo primero que vamos a implementar/crear es el metodo para cifrar las contraseñas. El nombre del metodo va a ser passwordEncoder y lo vamos a definir como un @Bean ya que posteriormente lo vamos a usar en el login porque necesitamos que se valide si la contraseña almacenada encriptada coincide con la que el usuario esta ingresando (la cual se hashea nuevamente para validar).
+10.1°_ Lo primero que vamos a implementar/definir es el metodo para cifrar las contraseñas. El nombre del metodo va a ser passwordEncoder y lo vamos a definir como un @Bean ya que posteriormente lo vamos a usar en el login porque necesitamos que se valide si la contraseña almacenada encriptada coincide con la que el usuario esta ingresando (la cual se hashea nuevamente para validar). Este metodo no recibe ningun parámetro porque lo que hace es poner a dispocición de Spring el encriptador que se va a usar. Ya Spring tiene sus metodos para encriptar la contraseña o desencriptar.
+
+10.2°_ Lo segundo que vamos a implementar/definir es el metodo SecurityFilterChain. Este metodo se usa para construir una cadena de filtros que interceptará las peticiones HTTP, aquí definimos las reglas de toda la API a la hora de recibir usuarios. Tiene 4 funcionalidades especificas, y estas son:
+    1. Decidir que rutas son públicas y cuáles son privadas.
+    2. Desactivar el uso de Sesiones (Stateless): por defecto, Spring Security intenta crear una sesión tradicional en la memoria del servidor (guardando cookies en el navegador). Como usamos JWT, necesitamos ordenarle que no guarde nada en memoria y que todas las peticiones deben ser tratadas independientemente.
+    3. Conectar nuestro filtro personalizado (JwtAuthenticationFilter): El motor de Spring tiene filtros por defecto los cuales, en este metodo, vamos a desactivar y le vamos a asignar nuestros filtros personalizados que estan preparados para recibir/validar JWT.
+    4. Desactivar protecciones innecesarios (com CSRF): La protección CSRF (Cross-Site Request Forgery) esta pensada para aplicaciones web basdas en sesiones y cookies. Como nuesta API con JWT es stateless y no usa cookies de sesión, son inmunes por naturaleza a este ataque. Por lo tanto, usamos este metodo para apagar esta proteccion y ahorrar recursos de servidor.
+
+11°_ Creamos el @Bean AuthenticationManager dentro de la clase SecurityConfig. Este @Bean se usa para exponer y poner a disposición de nuestra API el componente central que procesa el inicio de sesión (Login) en Spring Security: el AuthenticationManager. Al declararlo como un @Bean podemos usarlo dentro de cualquier servicio que lo necesite.
+
+12°_ Creamos el servicio de login (AuthService): Dentro de esta clase procesamos el flujo de autenticación. Recibimos un JSON con el email y la contraseña mapeados en un DTO y los validamos utilizando los componentes del ecosistema. Para lograrlo, inyectamos cuatro actores clave:
+    • UserRepository: Permite buscar los datos del usuario o registrarlo en la base de datos.
+    • JwtService: Se encarga de generar el token JWT firmado una vez que las credenciales son válidas.
+    • AuthenticationManager: El componente central de Spring Security que valida el login (compara la contraseña enviada con la de la BD) de forma automática y sin que tengamos que escribir lógica manual de verificación.
+    • PasswordEncoder: Se utiliza para encriptar de forma segura la contraseña en formato hash al momento de registrar un usuario nuevo.
+
+
+
+
 
 
 
 
 Problema: Spring Security busca en la DB el dato username, y yo no lo tengo ni en la DB ni en la entidad.
 Solución: el username se remplaza por el email. La documentación dice username pero nosotros vamos a validar por correo.
-
 Problema: El metodo PasswordEncoder nose como funciona, porque en ningún momento recibe una contraseña pero devuelve un codificador, el de BCrypt.

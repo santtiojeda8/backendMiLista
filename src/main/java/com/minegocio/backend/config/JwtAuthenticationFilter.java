@@ -66,28 +66,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
 
             // VALIDAR LA AUTENTICIDAD DEL PASE DIGITAL
-            // Llamamos al método matemático de JwtService para verificar: ¿El email coincide? Y ¿El token NO ha expirado?
+            // Llamamos al metodo matemático de JwtService para verificar si: ¿El email coincide? Y ¿El token NO ha expirado?
             if(jwtService.esValidoElToken(jwt, userDetails.getUsername())){
 
                 // ETAPA 3: CREAR LA CREDENCIAL OFICIAL Y DAR EL ACCESO
                 // Al ser el token 100% válido, fabricamos el "sello de aprobación" (UsernamePasswordAuthenticationToken)
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,                  // 1. El usuario completo extraído de la DB
-                        null,                         // 2. Credenciales físicas en null (no usamos contraseña, el JWT ya es la prueba)
+                        userDetails,    // 1. El usuario completo extraído de la DB
+                        null,   // 2. Credenciales físicas en null (no usamos contraseña, el JWT ya es la prueba)
                         userDetails.getAuthorities()  // 3. Cargamos la lista de roles/permisos del usuario
                 );
 
                 // Le inyectamos al sello detalles técnicos del origen de la petición (IP, navegador, etc.)
                 authToken.setDetails(new org.springframework.security.web.authentication.WebAuthenticationDetailsSource().buildDetails(request));
 
-                // ¡PASAPORTE APROBADO! Guardamos la credencial en el casillero de memoria central de Spring para esta petición.
+                //Guardamos la credencial en el casillero de memoria central de Spring para esta petición.
                 // A partir de esta línea, cualquier Controller sabrá exactamente quién es el usuario y lo dejará operar.
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
 
-        // CIERRE DEL FILTRO: Una vez que el guardián terminó de inspeccionar y aplicar permisos (o no),
-        // deja que la petición siga su curso normal hacia el controlador final.
+        // CIERRE DEL FILTRO: Una vez que terinamos de inspeccionar y aplicar permisos (o no),
+        // dejamos que la petición siga su curso normal hacia el controlador final.
         filterChain.doFilter(request, response);
     }
 }
