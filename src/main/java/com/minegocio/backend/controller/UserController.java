@@ -24,15 +24,10 @@ public class UserController {
     }
 
     @GetMapping("/")
-
     public List<UserResponse> getAllUsers(){
         return userService.getAllUsers();
     }
 
-    @PostMapping("/")
-    public UserResponse createUser (@RequestBody UserRequest user){
-        return userService.createUser(user);
-    }
 
     @PutMapping("/{id}")
     public UserResponse updateUser (@RequestBody UserRequest user, @PathVariable UUID id){

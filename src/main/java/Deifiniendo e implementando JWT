@@ -133,13 +133,29 @@ Esa es la teoría que necesitamos saber para poder implementar JWT en nuestro pr
     • AuthenticationManager: El componente central de Spring Security que valida el login (compara la contraseña enviada con la de la BD) de forma automática y sin que tengamos que escribir lógica manual de verificación.
     • PasswordEncoder: Se utiliza para encriptar de forma segura la contraseña en formato hash al momento de registrar un usuario nuevo.
 
+13°_ Creamos el login del usuario con el metodo loginUser(). Este metodo se encarga de recibir el email y el password del usuario, y a través de AuthenticationManager valida que el usuario exista en la DB, y luego valida que las contraseñas coincidan. Si el login se completa de manera exitosa, creamos un token con su email y se lo devolvemos al usuario/cliente mediante un DTO (AuthResponseDto).
+
+14°_ Creamos el controlador con la ruta pública la cual va a usarse para el login del usuario (AuthController). Este controlador recibe el LoginRequestDto y lo envía al AuthService. Si esta correcto, devuelve un objeto ResponseEntity<> con estado 200 OK que transporta el token JWT dentro del cuerpo (Body) de la respuesta en formato JSON.
+
+TERMINAMOS LA IMPLEMENTACIÓN DE JWT
+Con lo que realizamos posteriormente podemos decir que esta terminada la implementación de JWT en nuestro proyecto. Desde que el usuario intenta acceder a nuestras rutas privadas/publica hasta que completa un login y le devolvemos su token con sus permisos.
+Aun así, con esto terminado, me falta crear la ruta y los métodos publicos para que un usuario pueda registrarse en mi sistema y pueda crear su usuario. Esto se debe a que en mi DB no tengo las contraseñas encritadas, por lo que el usuario nunca va a poder validarse/autenticarse correctamente en mi sistema. Así que el siguiente paso va a ser que el usuario se pueda registrar en mi API.
 
 
 
 
+Los 3 Motivos del "Por Qué" hacemos el registro/createUser en Auth y no en UserService/UserController
 
+1. Principio de Responsabilidad Única (Cohesión)
+En el diseño de software profesional, se busca que las cosas que están relacionadas con el mismo concepto vivan en el mismo lugar.
+• Tu AuthController y tu AuthService manejan all lo relacionado con el mecanismo de entrada al edificio (la autenticación y la validación).
+• Tu UserController y tu UserService deberían encargarse exclusivamente de la gestión administrativa del usuario una vez que ya está adentro (por ejemplo: editar su perfil, cambiar su foto, listar los usuarios, o borrar una cuenta).
+Si dejas el registro en UserService y el login en AuthService, estás partiendo el "proceso de bienvenida" en dos archivos distintos.
 
+2. Experiencia de Usuario (El Token Inmediato)
+Como tu metodo signUser ahora es súper moderno y genera un token JWT inmediatamente tras registrarse para que el usuario no tenga que volver a escribir sus datos, el metodo ahora depende al 100% de JwtService y devuelve un AuthResponseDto.
+Si ponías esa lógica dentro de tu UserService, ibas a tener que inyectar el JwtService allí adentro, haciendo que tu servicio de usuarios se ensucie con temas de tokens y criptografía que no le corresponden a su naturaleza.
 
-Problema: Spring Security busca en la DB el dato username, y yo no lo tengo ni en la DB ni en la entidad.
-Solución: el username se remplaza por el email. La documentación dice username pero nosotros vamos a validar por correo.
-Problema: El metodo PasswordEncoder nose como funciona, porque en ningún momento recibe una contraseña pero devuelve un codificador, el de BCrypt.
+3. Seguridad de las Rutas
+Si dejas el controlador de usuarios normal, por lo general querrás protegerlo completo con un .requestMatchers("/api/users/**").authenticated() (porque no quieres que cualquiera pueda consultar la lista de usuarios o editar perfiles ajenos).
+Si metías el registro ahí, te iba a tocar hacer una excepción extraña en tus reglas para decir: "Protege all /api/users/, excepto si es un POST". Al agrupar el Login y el Registro bajo la ruta /api/auth/**, tu archivo SecurityConfig queda súper limpio y blindado: all lo que empiece con auth es público, all lo demás está cerrado.

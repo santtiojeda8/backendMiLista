@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String email;
 
-        // Control de entrada: Evaluamos si el cliente NO envió cabecera OR si no empieza con el formato "Bearer "
+        // Control de entrada: Evaluamos si el cliente NO envió cabecera O si no empieza con el formato "Bearer "
         if(authHeader == null || !authHeader.startsWith("Bearer ")){
 
             // Al no haber token que analizar (petición anónima/pública), le cedemos el control al siguiente filtro
@@ -69,7 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Llamamos al metodo matemático de JwtService para verificar si: ¿El email coincide? Y ¿El token NO ha expirado?
             if(jwtService.esValidoElToken(jwt, userDetails.getUsername())){
 
-                // ETAPA 3: CREAR LA CREDENCIAL OFICIAL Y DAR EL ACCESO
+                //CREAMOS LA CREDENCIAL OFICIAL Y DAMOS EL ACCESO
                 // Al ser el token 100% válido, fabricamos el "sello de aprobación" (UsernamePasswordAuthenticationToken)
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,    // 1. El usuario completo extraído de la DB

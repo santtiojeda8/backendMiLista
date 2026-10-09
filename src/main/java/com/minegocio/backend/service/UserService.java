@@ -36,22 +36,6 @@ public class UserService {
         return userRepository.findById(id).orElseThrow(() -> new RuntimeException("No se encontro el usuario con ID: " + id));
     }
 
-    // Metodo para guardar un usuario con validación de email
-    public UserResponse createUser(UserRequest user) {
-        User s = new User();
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("El email '" + user.getEmail() + "' ya está registrado.");
-        }
-
-        s.setName(user.getName());
-        s.setLastname(user.getLastName());
-        s.setEmail(user.getEmail());
-        s.setPassword(user.getPassword());
-
-        userRepository.save(s);
-        return new UserResponse(s.getName(), s.getLastname(),s.getEmail());
-    }
-
     public UserResponse updateUser(UserRequest user, UUID id) {
         // 1. Validar que exista el usuario en la BD (traer el registro existente)
         User existingUser = userRepository.findById(id).orElseThrow(() -> new RuntimeException("El usuario con ID " + id + " no existe."));
