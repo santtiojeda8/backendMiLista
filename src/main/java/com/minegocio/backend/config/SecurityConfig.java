@@ -57,7 +57,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Indicamos que cualquier petición dirigida a URLs que empiecen con "api/auth/" (como /login o /registro)
                         // sea completamente pública y accesible para usuarios anónimos sin token.
-                        .requestMatchers("api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
 
                         // Ordenamos que CUALQUIER OTRA petición a nuestra API requiera obligatoriamente
                         // que el usuario esté debidamente autenticado (es decir, que traiga un token válido).

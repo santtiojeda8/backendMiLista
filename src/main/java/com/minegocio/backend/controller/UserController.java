@@ -2,7 +2,10 @@ package com.minegocio.backend.controller;
 
 import com.minegocio.backend.dto.userdto.UserRequest;
 import com.minegocio.backend.dto.userdto.UserResponse;
+import com.minegocio.backend.entity.User;
 import com.minegocio.backend.service.UserService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,30 +21,30 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/{id}")
-    public UserResponse getUserById (@PathVariable UUID id){
-        return userService.getUserByIdDTO(id);
+    @GetMapping("/")
+    public ResponseEntity<UserResponse> getUserById (@AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(userService.getUserByIdDTO(logedUser.getIdUser()));
     }
 
-    @GetMapping("/")
+    @GetMapping("/allUsers")
     public List<UserResponse> getAllUsers(){
         return userService.getAllUsers();
     }
 
 
-    @PutMapping("/{id}")
-    public UserResponse updateUser (@RequestBody UserRequest user, @PathVariable UUID id){
-        return userService.updateUser(user, id);
+    @PutMapping("/")
+    public ResponseEntity<UserResponse> updateUser (@RequestBody UserRequest user,@AuthenticationPrincipal User logedUser) {
+        return ResponseEntity.ok(userService.updateUser(user, logedUser.getIdUser()));
     }
 
-    @PatchMapping("/{id}")
-    public UserResponse softDeleteUser (@PathVariable UUID id){
-        return userService.softDeleteUser(id);
+    @PatchMapping("/")
+    public ResponseEntity<UserResponse> softDeleteUser (@AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(userService.softDeleteUser(logedUser.getIdUser()));
     }
 
-    @PutMapping("/{id}/activate")
-    public UserResponse activateUser (@PathVariable UUID id){
-        return userService.activateUser(id);
+    @PutMapping("/activate")
+    public ResponseEntity<UserResponse> activateUser (@AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok( userService.activateUser(logedUser.getIdUser()) );
     }
 }
 

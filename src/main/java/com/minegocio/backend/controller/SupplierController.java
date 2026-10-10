@@ -2,7 +2,10 @@ package com.minegocio.backend.controller;
 
 import com.minegocio.backend.dto.supplierdto.SupplierRequest;
 import com.minegocio.backend.dto.supplierdto.SupplierResponse;
+import com.minegocio.backend.entity.User;
 import com.minegocio.backend.service.SupplierService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,28 +21,28 @@ public class SupplierController {
         this.supplierService = supplierService;
     }
 
-    @GetMapping("/{idUser}/allSupplier")
-    public List<SupplierResponse> getAllSupplier (@PathVariable UUID idUser){
-        return supplierService.getAllActiveSupplier(idUser);
+    @GetMapping("/allSupplier")
+    public ResponseEntity<List<SupplierResponse>> getAllActiveSupplier (@AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(supplierService.getAllActiveSupplier(logedUser.getIdUser()));
     }
 
-    @GetMapping("/{idSupplier}/{idUser}")
-    public SupplierResponse getSupplierById (@PathVariable UUID idSupplier, @PathVariable UUID idUser){
-        return supplierService.getSupplierByIdDTO(idSupplier, idUser);
+    @GetMapping("/{idSupplier}")
+    public ResponseEntity<SupplierResponse> getSupplierById (@PathVariable UUID idSupplier, @AuthenticationPrincipal User logedUser){
+        return  ResponseEntity.ok(supplierService.getSupplierByIdDTO(idSupplier, logedUser.getIdUser()));
     }
 
-    @PostMapping("/{idUser}")
-    public SupplierResponse createSupplier (@RequestBody SupplierRequest supplier, @PathVariable UUID idUser){
-        return supplierService.createSupplier(supplier, idUser);
+    @PostMapping("/")
+    public ResponseEntity<SupplierResponse> createSupplier (@RequestBody SupplierRequest supplier, @AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(supplierService.createSupplier(supplier, logedUser.getIdUser()));
     }
 
-    @PutMapping("/{idSupplier}/{idUser}")
-    public SupplierResponse updateSupplier (@RequestBody SupplierRequest supplier,@PathVariable UUID idSupplier, @PathVariable UUID idUser){
-        return supplierService.updateSupplier(supplier, idSupplier, idUser);
+    @PutMapping("/{idSupplier}")
+    public ResponseEntity<SupplierResponse> updateSupplier (@RequestBody SupplierRequest supplier,@PathVariable UUID idSupplier, @AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(supplierService.updateSupplier(supplier, idSupplier, logedUser.getIdUser()));
     }
 
-    @PatchMapping("/{idSupplier}/{idUser}")
-    public SupplierResponse softDelete (@PathVariable UUID idSupplier, @PathVariable UUID idUser){
-        return supplierService.softDelete(idSupplier, idUser);
+    @PatchMapping("/{idSupplier}")
+    public ResponseEntity<SupplierResponse> softDelete (@PathVariable UUID idSupplier, @AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(supplierService.softDelete(idSupplier, logedUser.getIdUser()));
     }
 }

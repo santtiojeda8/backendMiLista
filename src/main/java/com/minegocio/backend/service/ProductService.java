@@ -3,6 +3,7 @@ package com.minegocio.backend.service;
 import com.minegocio.backend.dto.productdto.ProductRequest;
 import com.minegocio.backend.dto.productdto.ProductResponse;
 import com.minegocio.backend.entity.Product;
+import com.minegocio.backend.exception.ResourceNotFoundException;
 import com.minegocio.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +49,7 @@ public class ProductService {
     }
 
     public ProductResponse getProductByIdDTO (UUID idProduct, UUID idUser){
-        Product p =  productRepository.findByIdProductAndUserIdUser(idProduct, idUser).orElseThrow( () -> new RuntimeException("No se encontró el Producto"));
+        Product p =  productRepository.findByIdProductAndUserIdUser(idProduct, idUser).orElseThrow( () -> new ResourceNotFoundException("No se encontró el Producto"));
         return new ProductResponse(p.getName(), p.getSalePrice());
     }
 

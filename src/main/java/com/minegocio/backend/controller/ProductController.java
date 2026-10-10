@@ -2,7 +2,10 @@ package com.minegocio.backend.controller;
 
 import com.minegocio.backend.dto.productdto.ProductRequest;
 import com.minegocio.backend.dto.productdto.ProductResponse;
+import com.minegocio.backend.entity.User;
 import com.minegocio.backend.service.ProductService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
@@ -16,29 +19,29 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @GetMapping("/{idUser}/allProduct")
-    public List<ProductResponse> getAllProducts (@PathVariable UUID idUser){
-        return productService.getAllActiveProduct(idUser);
+    @GetMapping("/allProduct")
+    public ResponseEntity<List<ProductResponse>> getAllProducts (@AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(productService.getAllActiveProduct(logedUser.getIdUser()));
     }
 
-    @GetMapping("/{idProduct}/{idUser}")
-    public ProductResponse getProductById (@PathVariable UUID idProduct, @PathVariable UUID idUser){
-        return productService.getProductByIdDTO(idProduct, idUser);
+    @GetMapping("/{idProduct}")
+    public ResponseEntity<ProductResponse> getProductById (@PathVariable UUID idProduct, @AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(productService.getProductByIdDTO(idProduct, logedUser.getIdUser()));
     }
 
-    @PostMapping("/{idUser}")
-    public ProductResponse createProduct (@RequestBody ProductRequest product, @PathVariable UUID idUser){
-        return productService.createProduct(product, idUser);
+    @PostMapping("/")
+    public ResponseEntity<ProductResponse> createProduct (@RequestBody ProductRequest product, @AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(productService.createProduct(product, logedUser.getIdUser()));
     }
 
-    @PutMapping("/{id}/{idUser}")
-    public ProductResponse updateProduct (@RequestBody ProductRequest product,@PathVariable UUID id, @PathVariable UUID idUser){
-        return productService.updateProduct(product, id, idUser);
+    @PutMapping("/{idProduct}")
+    public ResponseEntity<ProductResponse> updateProduct (@RequestBody ProductRequest product,@PathVariable UUID idProduct,@AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(productService.updateProduct(product, idProduct, logedUser.getIdUser()));
     }
 
-    @PatchMapping("/{id}/{idUser}")
-    public ProductResponse softDelete (@PathVariable UUID id, @PathVariable UUID idUser){
-        return productService.softDelete(id, idUser);
+    @PatchMapping("/{idProduct}")
+    public ResponseEntity<ProductResponse> softDelete (@PathVariable UUID idProduct, @AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(productService.softDelete(idProduct, logedUser.getIdUser()));
     }
 
 }
