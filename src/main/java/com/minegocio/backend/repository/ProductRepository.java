@@ -25,4 +25,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<Product> findByUserIdUserAndActiveTrue(UUID idUser);
 
     Optional<Product> findByIdProductAndUserIdUser(UUID idProduct, UUID userIdUser);
+
+    //Creamos esta consulta para comprobar si existe un Product, y le pertenece a cierto usuario
+    Boolean existsByIdProductAndUserIdUser(UUID idProduct, UUID idUser);
+
 }

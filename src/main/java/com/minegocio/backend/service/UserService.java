@@ -3,6 +3,8 @@ package com.minegocio.backend.service;
 import com.minegocio.backend.dto.userdto.UserRequest;
 import com.minegocio.backend.dto.userdto.UserResponse;
 import com.minegocio.backend.entity.User;
+import com.minegocio.backend.exception.BadRequestException;
+import com.minegocio.backend.exception.ResourceNotFoundException;
 import com.minegocio.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -27,18 +29,18 @@ public class UserService {
 
     // Metodo para buscar un usuario por su ID
     public UserResponse getUserByIdDTO (UUID id) {
-        User existingUser = userRepository.findById(id).orElseThrow(() -> new RuntimeException("No se encontro el usuario con ID: " + id));
+        User existingUser = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No se encontro el usuario con ID: " + id));
         return new UserResponse(existingUser.getName(), existingUser.getLastname(),existingUser.getEmail());
     }
 
     //Este lo usamos internamente para validar usuarios.
     public User findUserById (UUID id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("No se encontro el usuario con ID: " + id));
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No se encontro el usuario con ID: " + id));
     }
 
     public UserResponse updateUser(UserRequest user, UUID id) {
         // 1. Validar que exista el usuario en la BD (traer el registro existente)
-        User existingUser = userRepository.findById(id).orElseThrow(() -> new RuntimeException("El usuario con ID " + id + " no existe."));
+        User existingUser = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("El usuario con ID " + id + " no existe."));
 
         // 2. Validar qué datos traen valores nuevos para no guardar null
         if (user.getName() != null) existingUser.setName(user.getName());
@@ -48,7 +50,7 @@ public class UserService {
         // Validación de email
         if (user.getEmail() != null && !user.getEmail().equalsIgnoreCase(existingUser.getEmail())) {
             if (userRepository.existsByEmail(user.getEmail())) {
-                throw new RuntimeException("El email '" + user.getEmail() + "' ya está ocupado por otro usuario.");
+                throw new BadRequestException("El email '" + user.getEmail() + "' ya está ocupado por otro usuario.");
             }
             existingUser.setEmail(user.getEmail());
         }
@@ -63,7 +65,7 @@ public class UserService {
 
     public UserResponse softDeleteUser(UUID id) {
 
-        User existingEntity = userRepository.findById(id).orElseThrow(() -> new RuntimeException("El usuario con ID " + id + " no existe") );
+        User existingEntity = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("El usuario con ID " + id + " no existe") );
 
         existingEntity.setActive(false);
 
@@ -74,7 +76,7 @@ public class UserService {
 
     public UserResponse activateUser (UUID id){
 
-        User existingEntity = userRepository.findById(id).orElseThrow(() -> new RuntimeException("El usuario con ID" + id + " no existe") );
+        User existingEntity = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("El usuario con ID" + id + " no existe") );
 
         existingEntity.setActive(true);
 

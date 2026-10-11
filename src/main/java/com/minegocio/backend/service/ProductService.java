@@ -3,6 +3,7 @@ package com.minegocio.backend.service;
 import com.minegocio.backend.dto.productdto.ProductRequest;
 import com.minegocio.backend.dto.productdto.ProductResponse;
 import com.minegocio.backend.entity.Product;
+import com.minegocio.backend.exception.BadRequestException;
 import com.minegocio.backend.exception.ResourceNotFoundException;
 import com.minegocio.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -33,13 +34,18 @@ public class ProductService {
         Product p = new Product();
 
         //Le definimos su creador.
-        p.setUser( userService.findUserById(idUser));
+        p.setUser(userService.findUserById(idUser));
 
         //Le definimos el nombre.
-        p.setName(product.getName());
+        if(product.getName() != null) p.setName(product.getName());
 
         //Le definimos el precio de venta.
-        p.setSalePrice(product.getSalePrice());
+        if(product.getSalePrice() != null) {
+            if(product.getSalePrice().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                throw new BadRequestException("El precio de venta del producto no puede ser negativo, ni cero.");
+            }
+            p.setSalePrice(product.getSalePrice());
+        }
 
         //Guardamos el producto en la Base de Datos.
         productRepository.save(p);
@@ -54,11 +60,11 @@ public class ProductService {
     }
 
     public Product findProductById (UUID idProduct, UUID idUser){
-        return productRepository.findByIdProductAndUserIdUser(idProduct, idUser).orElseThrow( () -> new RuntimeException("No se encontró el Producto"));
+        return productRepository.findByIdProductAndUserIdUser(idProduct, idUser).orElseThrow( () -> new ResourceNotFoundException("No se encontró el Producto"));
     }
 
     public ProductResponse updateProduct (ProductRequest product, UUID idProduct, UUID idUser) {
-        Product existingEntity = productRepository.findByIdProductAndUserIdUser(idProduct, idUser).orElseThrow(() -> new RuntimeException("No se encontro el producto con el ID: " + idProduct));
+        Product existingEntity = productRepository.findByIdProductAndUserIdUser(idProduct, idUser).orElseThrow(() -> new ResourceNotFoundException("No se encontro el producto con el ID: " + idProduct));
 
         if(product.getName() != null) existingEntity.setName(product.getName());
 
@@ -69,13 +75,18 @@ public class ProductService {
     }
 
     public ProductResponse softDelete (UUID id, UUID idUser){
-        Product existingEntity = productRepository.findByIdProductAndUserIdUser(id, idUser).orElseThrow(() -> new RuntimeException("No se encontro el producto con el ID: " + id));
+        Product existingEntity = productRepository.findByIdProductAndUserIdUser(id, idUser).orElseThrow(() -> new ResourceNotFoundException("No se encontro el producto con el ID: " + id));
 
         existingEntity.setActive(false);
 
         productRepository.save(existingEntity);
 
         return new ProductResponse(existingEntity.getName(), existingEntity.getSalePrice());
+    }
+
+    //Solo se usa en CostRecord
+    public Boolean existsProduct(UUID id, UUID idUser){
+        return productRepository.existsByIdProductAndUserIdUser(id,idUser);
     }
 
 

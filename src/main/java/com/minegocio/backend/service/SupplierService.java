@@ -3,6 +3,7 @@ package com.minegocio.backend.service;
 import com.minegocio.backend.dto.supplierdto.SupplierRequest;
 import com.minegocio.backend.dto.supplierdto.SupplierResponse;
 import com.minegocio.backend.entity.Supplier;
+import com.minegocio.backend.exception.ResourceNotFoundException;
 import com.minegocio.backend.repository.SupplierRepository;
 import org.springframework.stereotype.Service;
 
@@ -52,18 +53,18 @@ public class SupplierService {
     }
 
     public SupplierResponse getSupplierByIdDTO (UUID idSupplier, UUID idUser) {
-        Supplier existingEntity = supplierRepository.findByIdSupplierAndUserIdUser(idSupplier, idUser).orElseThrow(() -> new RuntimeException("No se encontro el proveedor con el ID: " + idSupplier));
+        Supplier existingEntity = supplierRepository.findByIdSupplierAndUserIdUser(idSupplier, idUser).orElseThrow(() -> new ResourceNotFoundException("No se encontro el proveedor con el ID: " + idSupplier));
         return new SupplierResponse(existingEntity.getName());
     }
 
-    //Este metodo devuleve el Supplier completo, lo cual es útil para trabajar con relaciones entre entidades.
+    //Este metodo devuelve el Supplier completo, lo cual es útil para trabajar con relaciones entre entidades.
     public Supplier findSupplierById( UUID idSupplier, UUID idUser){
-        return supplierRepository.findByIdSupplierAndUserIdUser(idSupplier, idUser).orElseThrow(() -> new RuntimeException("No se encontro el proveedor con el ID: " + idSupplier));
+        return supplierRepository.findByIdSupplierAndUserIdUser(idSupplier, idUser).orElseThrow(() -> new ResourceNotFoundException("No se encontro el proveedor con el ID: " + idSupplier));
     }
 
     public SupplierResponse updateSupplier(SupplierRequest supplier, UUID idSupplier, UUID idUser) {
 
-        Supplier existingEntity = supplierRepository.findByIdSupplierAndUserIdUser(idSupplier, idUser).orElseThrow(() -> new RuntimeException("No se encontro el proveedor con el ID: " + idSupplier));
+        Supplier existingEntity = supplierRepository.findByIdSupplierAndUserIdUser(idSupplier, idUser).orElseThrow(() -> new ResourceNotFoundException("No se encontro el proveedor con el ID: " + idSupplier));
 
         if (supplier.getName() != null) {
             existingEntity.setName(supplier.getName());
@@ -76,7 +77,7 @@ public class SupplierService {
     }
 
     public SupplierResponse softDelete(UUID idSupplier, UUID idUser) {
-        Supplier existingEntity = supplierRepository.findByIdSupplierAndUserIdUser(idSupplier, idUser).orElseThrow(() -> new RuntimeException("No se encontro el proveedor con el ID: " + idSupplier));
+        Supplier existingEntity = supplierRepository.findByIdSupplierAndUserIdUser(idSupplier, idUser).orElseThrow(() -> new ResourceNotFoundException("No se encontro el proveedor con el ID: " + idSupplier));
 
         existingEntity.setActive(false);
 

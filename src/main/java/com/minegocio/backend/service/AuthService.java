@@ -3,8 +3,8 @@ package com.minegocio.backend.service;
 import com.minegocio.backend.dto.AuthResponseDto;
 import com.minegocio.backend.dto.LoginRequestDto;
 import com.minegocio.backend.dto.userdto.UserRequest;
-import com.minegocio.backend.dto.userdto.UserResponse;
 import com.minegocio.backend.entity.User;
+import com.minegocio.backend.exception.BadRequestException;
 import com.minegocio.backend.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,7 +40,7 @@ public class AuthService {
     public AuthResponseDto signUser(UserRequest userRequest){
         User s = new User();
         if (userRepository.existsByEmail(userRequest.getEmail())) {
-            throw new RuntimeException("El email '" + userRequest.getEmail() + "' ya está registrado.");
+            throw new BadRequestException("El email '" + userRequest.getEmail() + "' ya está registrado.");
         }
 
         s.setName(userRequest.getName());

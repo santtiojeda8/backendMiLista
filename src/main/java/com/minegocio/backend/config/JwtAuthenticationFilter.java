@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         /*
          * AISLAR EL JWT PURO
-         * Si el código llegó aquí, superó el "if", lo que significa que la petición SÍ trae un token Bearer.
+         * Si el código llegó aquí y superó el "if", significa que la petición SI trae un token en formato Bearer.
          * Usamos substring(7) para saltarnos los primeros 7 caracteres ("Bearer ") y guardar solo la cadena del JWT.
          * */
         jwt = authHeader.substring(7);

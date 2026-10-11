@@ -42,9 +42,4 @@ public class JwtService {
     public Boolean esValidoElToken(String token, String emailUser){
         return (extraerEmail(token).equals(emailUser) && ! extraerClaims(token).getExpiration().before(new Date()));
     }
-
-
-
-
-
 }

@@ -3,6 +3,8 @@ package com.minegocio.backend.service;
 import com.minegocio.backend.dto.costrecorddto.CostRecordRequest;
 import com.minegocio.backend.dto.costrecorddto.CostRecordResponse;
 import com.minegocio.backend.entity.CostRecord;
+import com.minegocio.backend.exception.BadRequestException;
+import com.minegocio.backend.exception.ResourceNotFoundException;
 import com.minegocio.backend.repository.CostRecordRepository;
 import org.springframework.stereotype.Service;
 
@@ -25,10 +27,22 @@ public class CostRecordService {
     }
 
     public List<CostRecordResponse> getAllActiveRecords (UUID idProduct, UUID idUser){
-        return costRecordRepository.findByProductIdProductAndProductUserIdUserAndActiveTrue(idProduct, idUser)
+
+        // El usuario ya está validado por el JWT, así que nos ahorramos esa consulta.
+        // Solo validamos el producto si querés ser estricto con el 404:
+        if (!productService.existsProduct(idProduct, idUser)) {
+            throw new ResourceNotFoundException("El producto con ID " + idProduct + " no existe.");
+        }
+
+            return costRecordRepository.findByProductIdProductAndProductUserIdUserAndActiveTrue(idProduct, idUser)
                 .stream()
-                .map(costRecord -> new CostRecordResponse(costRecord.getProduct().getName(), costRecord.getSupplier().getName(), costRecord.getDate(),costRecord.getCostPrice()))
-                .toList();
+                .map(costRecord -> new CostRecordResponse(
+                        costRecord.getProduct().getName(),
+                        costRecord.getSupplier().getName(),
+                        costRecord.getDate(),
+                        costRecord.getCostPrice()
+                )
+                ).toList();
     }
 
     public CostRecordResponse createCostRecord(CostRecordRequest costRecord, UUID idProduct, UUID idSupplier, UUID idUser){
@@ -46,7 +60,7 @@ public class CostRecordService {
 
         existingEntity.setDate(LocalDate.now());
 
-        if(costRecord.getCostPrice().compareTo(BigDecimal.ZERO) <= 0) throw new RuntimeException("El precio no puede ser negativo, ni cero");
+        if(costRecord.getCostPrice().compareTo(BigDecimal.ZERO) <= 0) throw new BadRequestException("El precio no puede ser negativo, ni cero");
         existingEntity.setCostPrice(costRecord.getCostPrice());
 
         costRecordRepository.save(existingEntity);
@@ -54,19 +68,23 @@ public class CostRecordService {
         return new CostRecordResponse(existingEntity.getProduct().getName(), existingEntity.getSupplier().getName(), existingEntity.getDate(),existingEntity.getCostPrice());
     }
 
+    //Este metodo no considero que se vaya a usar, hasta que no termine la API, no lo vamos a comentar
     public CostRecordResponse getCostRecordById(UUID id){
-        CostRecord existingEntity =  costRecordRepository.findById(id).orElseThrow( () -> new RuntimeException("No se encontró el CostRecord con ID: "+ id) );
+        CostRecord existingEntity =  costRecordRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("No se encontró el CostRecord con ID: "+ id) );
         return new CostRecordResponse(existingEntity.getProduct().getName(), existingEntity.getSupplier().getName(), existingEntity.getDate(),existingEntity.getCostPrice()) ;
     }
 
     /*
-    * CORRECIÓN--> Este metodo lo vamos a aceptar ya que NO vamos a permitir que el usuario elimine un registro de compra.
+    * CORRECIÓN--> Este metodo lo vamos a aceptar ya que NO vamos a permitir que el usuario modifique un registro de compra.
     * Van a quedar todos registrados si o si.
     */
     public CostRecordResponse softDeleteCostRecord (UUID idCostRecord, UUID idUser){
-        CostRecord existingEntity = costRecordRepository.findByIdCostRecordAndProductUserIdUser(idCostRecord, idUser).orElseThrow( () -> new RuntimeException("No se encotró el registro con ID: " + idCostRecord));
+        CostRecord existingEntity = costRecordRepository.findByIdCostRecordAndProductUserIdUser(idCostRecord, idUser).orElseThrow( () -> new ResourceNotFoundException("No se encotró el registro con ID: " + idCostRecord));
+
         existingEntity.setActive(false);
+
         costRecordRepository.save(existingEntity);
+
         return new CostRecordResponse(existingEntity.getProduct().getName(), existingEntity.getSupplier().getName(), existingEntity.getDate(),existingEntity.getCostPrice());
     }
 
