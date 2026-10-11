@@ -3,10 +3,10 @@ package com.minegocio.backend.service;
 import com.minegocio.backend.dto.productdto.ProductRequest;
 import com.minegocio.backend.dto.productdto.ProductResponse;
 import com.minegocio.backend.entity.Product;
-import com.minegocio.backend.exception.BadRequestException;
 import com.minegocio.backend.exception.ResourceNotFoundException;
 import com.minegocio.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +22,7 @@ public class ProductService {
         this.userService = userService;
     }
 
+    @Transactional(readOnly = true)
     public List<ProductResponse> getAllActiveProduct (UUID idUser){
         return productRepository.findByUserIdUserAndActiveTrue(idUser)
                 .stream()
@@ -29,6 +30,7 @@ public class ProductService {
                 .toList();
     }
 
+    @Transactional
     public ProductResponse createProduct (ProductRequest product, UUID idUser){
         //Creamos el nuevo Producto.
         Product p = new Product();
@@ -49,15 +51,18 @@ public class ProductService {
         return new ProductResponse(p.getName(),p.getSalePrice());
     }
 
+    @Transactional(readOnly = true)
     public ProductResponse getProductByIdDTO (UUID idProduct, UUID idUser){
         Product p =  productRepository.findByIdProductAndUserIdUser(idProduct, idUser).orElseThrow( () -> new ResourceNotFoundException("No se encontró el Producto"));
         return new ProductResponse(p.getName(), p.getSalePrice());
     }
 
+    @Transactional(readOnly = true)
     public Product findProductById (UUID idProduct, UUID idUser){
         return productRepository.findByIdProductAndUserIdUser(idProduct, idUser).orElseThrow( () -> new ResourceNotFoundException("No se encontró el Producto"));
     }
 
+    @Transactional
     public ProductResponse updateProduct (ProductRequest product, UUID idProduct, UUID idUser) {
         Product existingEntity = productRepository.findByIdProductAndUserIdUser(idProduct, idUser).orElseThrow(() -> new ResourceNotFoundException("No se encontro el producto con el ID: " + idProduct));
 
@@ -69,6 +74,7 @@ public class ProductService {
         return new ProductResponse(existingEntity.getName(), existingEntity.getSalePrice());
     }
 
+    @Transactional
     public ProductResponse softDelete (UUID id, UUID idUser){
         Product existingEntity = productRepository.findByIdProductAndUserIdUser(id, idUser).orElseThrow(() -> new ResourceNotFoundException("No se encontro el producto con el ID: " + id));
 
@@ -80,6 +86,7 @@ public class ProductService {
     }
 
     //Solo se usa en CostRecord
+    @Transactional(readOnly = true)
     public Boolean existsProduct(UUID id, UUID idUser){
         return productRepository.existsByIdProductAndUserIdUser(id,idUser);
     }

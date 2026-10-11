@@ -7,6 +7,8 @@ import com.minegocio.backend.exception.BadRequestException;
 import com.minegocio.backend.exception.ResourceNotFoundException;
 import com.minegocio.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +22,7 @@ public class UserService {
     }
 
     // Metodo para obtener todos los usuarios
+    @Transactional(readOnly = true)
     public List<UserResponse> getAllUsers() {
         return userRepository.findByActiveTrue()
                 .stream()
@@ -28,16 +31,19 @@ public class UserService {
     }
 
     // Metodo para buscar un usuario por su ID
+    @Transactional(readOnly = true)
     public UserResponse getUserByIdDTO (UUID id) {
         User existingUser = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No se encontro el usuario con ID: " + id));
         return new UserResponse(existingUser.getName(), existingUser.getLastname(),existingUser.getEmail());
     }
 
     //Este lo usamos internamente para validar usuarios.
+    @Transactional(readOnly = true)
     public User findUserById (UUID id) {
         return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No se encontro el usuario con ID: " + id));
     }
 
+    @Transactional
     public UserResponse updateUser(UserRequest user, UUID id) {
         //Validamos que exista el usuario en la BD (traer el registro existente)
         User existingUser = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("El usuario con ID " + id + " no existe."));
@@ -62,6 +68,7 @@ public class UserService {
         return new UserResponse(existingUser.getName(), existingUser.getLastname(),existingUser.getEmail());
     }
 
+    @Transactional
     public UserResponse softDeleteUser(UUID id) {
 
         User existingEntity = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("El usuario con ID " + id + " no existe") );
@@ -73,6 +80,7 @@ public class UserService {
         return new UserResponse(existingEntity.getName(), existingEntity.getLastname(),existingEntity.getEmail());
     }
 
+    @Transactional
     public UserResponse activateUser (UUID id){
 
         User existingEntity = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("El usuario con ID" + id + " no existe") );

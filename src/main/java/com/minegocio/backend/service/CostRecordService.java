@@ -7,6 +7,7 @@ import com.minegocio.backend.exception.BadRequestException;
 import com.minegocio.backend.exception.ResourceNotFoundException;
 import com.minegocio.backend.repository.CostRecordRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ public class CostRecordService {
         this.supplierService = supplierService;
     }
 
+    @Transactional(readOnly = true)
     public List<CostRecordResponse> getAllActiveRecords (UUID idProduct, UUID idUser){
 
         // El usuario ya está validado por el JWT, así que nos ahorramos esa consulta.
@@ -45,6 +47,7 @@ public class CostRecordService {
                 ).toList();
     }
 
+    @Transactional
     public CostRecordResponse createCostRecord(CostRecordRequest costRecord, UUID idProduct, UUID idSupplier, UUID idUser){
 
         CostRecord existingEntity = new CostRecord();
@@ -68,6 +71,7 @@ public class CostRecordService {
     }
 
     //Este metodo no considero que se vaya a usar. Hasta que no termine la API, no lo vamos a comentar/eliminar
+    @Transactional(readOnly = true)
     public CostRecordResponse getCostRecordById(UUID id){
         CostRecord existingEntity =  costRecordRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("No se encontró el CostRecord con ID: "+ id) );
         return new CostRecordResponse(existingEntity.getProduct().getName(), existingEntity.getSupplier().getName(), existingEntity.getDate(),existingEntity.getCostPrice()) ;
@@ -78,6 +82,7 @@ public class CostRecordService {
     * Van a quedar todos registrados si o si.
     * Por esa razón vamos a permitirle que lo desactive.
     */
+    @Transactional
     public CostRecordResponse softDeleteCostRecord (UUID idCostRecord, UUID idUser){
         CostRecord existingEntity = costRecordRepository.findByIdCostRecordAndProductUserIdUser(idCostRecord, idUser).orElseThrow( () -> new ResourceNotFoundException("No se encotró el registro con ID: " + idCostRecord));
 
