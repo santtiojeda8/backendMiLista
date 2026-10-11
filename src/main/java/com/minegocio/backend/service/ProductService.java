@@ -39,13 +39,8 @@ public class ProductService {
         //Le definimos el nombre.
         if(product.getName() != null) p.setName(product.getName());
 
-        //Le definimos el precio de venta.
-        if(product.getSalePrice() != null) {
-            if(product.getSalePrice().compareTo(java.math.BigDecimal.ZERO) <= 0) {
-                throw new BadRequestException("El precio de venta del producto no puede ser negativo, ni cero.");
-            }
-            p.setSalePrice(product.getSalePrice());
-        }
+        //La validación la realiza Jakarta y valida que el valor sea positivo, mayor a 0 y que no sea null.
+        p.setSalePrice(product.getSalePrice());
 
         //Guardamos el producto en la Base de Datos.
         productRepository.save(p);

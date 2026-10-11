@@ -60,7 +60,6 @@ public class CostRecordService {
 
         existingEntity.setDate(LocalDate.now());
 
-        if(costRecord.getCostPrice().compareTo(BigDecimal.ZERO) <= 0) throw new BadRequestException("El precio no puede ser negativo, ni cero");
         existingEntity.setCostPrice(costRecord.getCostPrice());
 
         costRecordRepository.save(existingEntity);
@@ -68,7 +67,7 @@ public class CostRecordService {
         return new CostRecordResponse(existingEntity.getProduct().getName(), existingEntity.getSupplier().getName(), existingEntity.getDate(),existingEntity.getCostPrice());
     }
 
-    //Este metodo no considero que se vaya a usar, hasta que no termine la API, no lo vamos a comentar
+    //Este metodo no considero que se vaya a usar. Hasta que no termine la API, no lo vamos a comentar/eliminar
     public CostRecordResponse getCostRecordById(UUID id){
         CostRecord existingEntity =  costRecordRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("No se encontró el CostRecord con ID: "+ id) );
         return new CostRecordResponse(existingEntity.getProduct().getName(), existingEntity.getSupplier().getName(), existingEntity.getDate(),existingEntity.getCostPrice()) ;
@@ -77,6 +76,7 @@ public class CostRecordService {
     /*
     * CORRECIÓN--> Este metodo lo vamos a aceptar ya que NO vamos a permitir que el usuario modifique un registro de compra.
     * Van a quedar todos registrados si o si.
+    * Por esa razón vamos a permitirle que lo desactive.
     */
     public CostRecordResponse softDeleteCostRecord (UUID idCostRecord, UUID idUser){
         CostRecord existingEntity = costRecordRepository.findByIdCostRecordAndProductUserIdUser(idCostRecord, idUser).orElseThrow( () -> new ResourceNotFoundException("No se encotró el registro con ID: " + idCostRecord));
@@ -88,7 +88,7 @@ public class CostRecordService {
         return new CostRecordResponse(existingEntity.getProduct().getName(), existingEntity.getSupplier().getName(), existingEntity.getDate(),existingEntity.getCostPrice());
     }
 
-    //Este metodo también lo vamos a tener oculto ya que la APP por el momento no necesita saber si hay registros eliminados
+    //Este metodo también lo vamos a tener oculto ya que la API. Por el momento el usuario no necesita saber si hay registros eliminados
     /*
     public List<CostRecord> getAllRecords (Integer idProduct, Integer idUser){
         return costRecordRepository.findByProductIdProductAndProductUserIdUser(idProduct, idUser);

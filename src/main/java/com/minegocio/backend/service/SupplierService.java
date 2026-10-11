@@ -63,7 +63,6 @@ public class SupplierService {
     }
 
     public SupplierResponse updateSupplier(SupplierRequest supplier, UUID idSupplier, UUID idUser) {
-
         Supplier existingEntity = supplierRepository.findByIdSupplierAndUserIdUser(idSupplier, idUser).orElseThrow(() -> new ResourceNotFoundException("No se encontro el proveedor con el ID: " + idSupplier));
 
         if (supplier.getName() != null) {
@@ -71,7 +70,6 @@ public class SupplierService {
         }
 
         supplierRepository.save(existingEntity);
-
 
         return new SupplierResponse(existingEntity.getName());
     }

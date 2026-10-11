@@ -4,6 +4,7 @@ import com.minegocio.backend.dto.productdto.ProductRequest;
 import com.minegocio.backend.dto.productdto.ProductResponse;
 import com.minegocio.backend.entity.User;
 import com.minegocio.backend.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,12 @@ public class ProductController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<ProductResponse> createProduct (@RequestBody ProductRequest product, @AuthenticationPrincipal User logedUser){
+    public ResponseEntity<ProductResponse> createProduct (@Valid @RequestBody ProductRequest product, @AuthenticationPrincipal User logedUser){
         return ResponseEntity.ok(productService.createProduct(product, logedUser.getIdUser()));
     }
 
     @PutMapping("/{idProduct}")
-    public ResponseEntity<ProductResponse> updateProduct (@RequestBody ProductRequest product,@PathVariable UUID idProduct,@AuthenticationPrincipal User logedUser){
+    public ResponseEntity<ProductResponse> updateProduct (@Valid @RequestBody ProductRequest product,@PathVariable UUID idProduct,@AuthenticationPrincipal User logedUser){
         return ResponseEntity.ok(productService.updateProduct(product, idProduct, logedUser.getIdUser()));
     }
 

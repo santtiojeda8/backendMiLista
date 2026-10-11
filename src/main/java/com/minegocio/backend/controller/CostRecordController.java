@@ -4,6 +4,7 @@ import com.minegocio.backend.dto.costrecorddto.CostRecordRequest;
 import com.minegocio.backend.dto.costrecorddto.CostRecordResponse;
 import com.minegocio.backend.entity.User;
 import com.minegocio.backend.service.CostRecordService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class CostRecordController {
 
 
     @PostMapping("/{idProduct}/{idSupplier}")
-    public ResponseEntity<CostRecordResponse> createCostRecord (@RequestBody CostRecordRequest costRecord, @PathVariable UUID idProduct, @PathVariable UUID idSupplier, @AuthenticationPrincipal User logedUser){
+    public ResponseEntity<CostRecordResponse> createCostRecord (@Valid @RequestBody CostRecordRequest costRecord, @PathVariable UUID idProduct, @PathVariable UUID idSupplier, @AuthenticationPrincipal User logedUser){
         return ResponseEntity.ok( costRecordService.createCostRecord(costRecord, idProduct, idSupplier, logedUser.getIdUser()));
     }
 

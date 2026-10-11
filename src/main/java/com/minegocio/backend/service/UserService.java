@@ -39,10 +39,9 @@ public class UserService {
     }
 
     public UserResponse updateUser(UserRequest user, UUID id) {
-        // 1. Validar que exista el usuario en la BD (traer el registro existente)
+        //Validamos que exista el usuario en la BD (traer el registro existente)
         User existingUser = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("El usuario con ID " + id + " no existe."));
 
-        // 2. Validar qué datos traen valores nuevos para no guardar null
         if (user.getName() != null) existingUser.setName(user.getName());
 
         if(user.getLastName() != null) existingUser.setLastname(user.getLastName() );
@@ -57,7 +56,7 @@ public class UserService {
 
         if(user.getPassword() != null) existingUser.setPassword(user.getPassword());
 
-        // 3. Hacer save al usuario existente actualizado
+        //Hacemos el save al usuario existente actualizado
         userRepository.save(existingUser);
 
         return new UserResponse(existingUser.getName(), existingUser.getLastname(),existingUser.getEmail());
@@ -84,4 +83,7 @@ public class UserService {
 
         return new UserResponse(existingEntity.getName(), existingEntity.getLastname(),existingEntity.getEmail());
     }
+
+    //Aquí falta el metodo para crear usuario, pero en realidad no, porque lo trasladamos al AuthService, que se encarga de validar al usuario
+    // y luego lo loguea y le asigna un token así el usuario puede interactuar con la aplicación.
 }

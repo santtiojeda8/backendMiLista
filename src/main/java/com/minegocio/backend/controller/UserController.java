@@ -4,6 +4,7 @@ import com.minegocio.backend.dto.userdto.UserRequest;
 import com.minegocio.backend.dto.userdto.UserResponse;
 import com.minegocio.backend.entity.User;
 import com.minegocio.backend.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,7 @@ public class UserController {
 
 
     @PutMapping("/")
-    public ResponseEntity<UserResponse> updateUser (@RequestBody UserRequest user,@AuthenticationPrincipal User logedUser) {
+    public ResponseEntity<UserResponse> updateUser (@Valid @RequestBody UserRequest user, @AuthenticationPrincipal User logedUser) {
         return ResponseEntity.ok(userService.updateUser(user, logedUser.getIdUser()));
     }
 

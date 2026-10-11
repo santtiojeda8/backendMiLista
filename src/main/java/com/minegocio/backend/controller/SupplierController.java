@@ -4,6 +4,7 @@ import com.minegocio.backend.dto.supplierdto.SupplierRequest;
 import com.minegocio.backend.dto.supplierdto.SupplierResponse;
 import com.minegocio.backend.entity.User;
 import com.minegocio.backend.service.SupplierService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -32,12 +33,12 @@ public class SupplierController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<SupplierResponse> createSupplier (@RequestBody SupplierRequest supplier, @AuthenticationPrincipal User logedUser){
+    public ResponseEntity<SupplierResponse> createSupplier (@Valid @RequestBody SupplierRequest supplier, @AuthenticationPrincipal User logedUser){
         return ResponseEntity.ok(supplierService.createSupplier(supplier, logedUser.getIdUser()));
     }
 
     @PutMapping("/{idSupplier}")
-    public ResponseEntity<SupplierResponse> updateSupplier (@RequestBody SupplierRequest supplier,@PathVariable UUID idSupplier, @AuthenticationPrincipal User logedUser){
+    public ResponseEntity<SupplierResponse> updateSupplier (@Valid @RequestBody SupplierRequest supplier,@PathVariable UUID idSupplier, @AuthenticationPrincipal User logedUser){
         return ResponseEntity.ok(supplierService.updateSupplier(supplier, idSupplier, logedUser.getIdUser()));
     }
 
