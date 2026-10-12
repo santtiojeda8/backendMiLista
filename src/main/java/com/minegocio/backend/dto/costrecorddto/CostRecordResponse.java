@@ -2,8 +2,10 @@ package com.minegocio.backend.dto.costrecorddto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 public class CostRecordResponse {
+    private UUID idCostRecord;
     private String nameProduct, nameSupplier;
     private LocalDate date;
     private BigDecimal costPrice;

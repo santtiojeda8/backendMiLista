@@ -26,7 +26,7 @@ public class ProductService {
     public List<ProductResponse> getAllActiveProduct (UUID idUser){
         return productRepository.findByUserIdUserAndActiveTrue(idUser)
                 .stream()
-                .map(product -> new ProductResponse(product.getName(), product.getSalePrice()))
+                .map(product -> new ProductResponse(product.getIdProduct(),product.getName(), product.getSalePrice()))
                 .toList();
     }
 
@@ -48,13 +48,13 @@ public class ProductService {
         productRepository.save(p);
 
         //Retornamos el DTO solo con los datos que vamos a mostrar.
-        return new ProductResponse(p.getName(),p.getSalePrice());
+        return new ProductResponse(p.getIdProduct(),p.getName(),p.getSalePrice());
     }
 
     @Transactional(readOnly = true)
     public ProductResponse getProductByIdDTO (UUID idProduct, UUID idUser){
         Product p =  productRepository.findByIdProductAndUserIdUser(idProduct, idUser).orElseThrow( () -> new ResourceNotFoundException("No se encontró el Producto"));
-        return new ProductResponse(p.getName(), p.getSalePrice());
+        return new ProductResponse(p.getIdProduct(),p.getName(),p.getSalePrice());
     }
 
     @Transactional(readOnly = true)
@@ -71,7 +71,7 @@ public class ProductService {
         if(product.getSalePrice() != null) existingEntity.setSalePrice(product.getSalePrice());
 
         productRepository.save(existingEntity);
-        return new ProductResponse(existingEntity.getName(), existingEntity.getSalePrice());
+        return new ProductResponse(existingEntity.getIdProduct(),existingEntity.getName(), existingEntity.getSalePrice());
     }
 
     @Transactional
@@ -82,7 +82,7 @@ public class ProductService {
 
         productRepository.save(existingEntity);
 
-        return new ProductResponse(existingEntity.getName(), existingEntity.getSalePrice());
+        return new ProductResponse(existingEntity.getIdProduct(), existingEntity.getName(), existingEntity.getSalePrice());
     }
 
     //Solo se usa en CostRecord
