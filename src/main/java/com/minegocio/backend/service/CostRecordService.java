@@ -39,6 +39,7 @@ public class CostRecordService {
             return costRecordRepository.findByProductIdProductAndProductUserIdUserAndActiveTrue(idProduct, idUser)
                 .stream()
                 .map(costRecord -> new CostRecordResponse(
+                        costRecord.getIdCostRecord(),
                         costRecord.getProduct().getName(),
                         costRecord.getSupplier().getName(),
                         costRecord.getDate(),
@@ -67,14 +68,25 @@ public class CostRecordService {
 
         costRecordRepository.save(existingEntity);
 
-        return new CostRecordResponse(existingEntity.getProduct().getName(), existingEntity.getSupplier().getName(), existingEntity.getDate(),existingEntity.getCostPrice());
+        return new CostRecordResponse(
+                existingEntity.getIdCostRecord(),
+                existingEntity.getProduct().getName(),
+                existingEntity.getSupplier().getName(),
+                existingEntity.getDate(),
+                existingEntity.getCostPrice()
+        );
     }
 
     //Este metodo no considero que se vaya a usar. Hasta que no termine la API, no lo vamos a comentar/eliminar
     @Transactional(readOnly = true)
     public CostRecordResponse getCostRecordById(UUID id){
         CostRecord existingEntity =  costRecordRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("No se encontró el CostRecord con ID: "+ id) );
-        return new CostRecordResponse(existingEntity.getProduct().getName(), existingEntity.getSupplier().getName(), existingEntity.getDate(),existingEntity.getCostPrice()) ;
+        return new CostRecordResponse(existingEntity.getIdCostRecord(),
+                existingEntity.getProduct().getName(),
+                existingEntity.getSupplier().getName(),
+                existingEntity.getDate(),
+                existingEntity.getCostPrice()
+        );
     }
 
     /*
@@ -90,7 +102,13 @@ public class CostRecordService {
 
         costRecordRepository.save(existingEntity);
 
-        return new CostRecordResponse(existingEntity.getProduct().getName(), existingEntity.getSupplier().getName(), existingEntity.getDate(),existingEntity.getCostPrice());
+        return new CostRecordResponse(
+                existingEntity.getIdCostRecord(),
+                existingEntity.getProduct().getName(),
+                existingEntity.getSupplier().getName(),
+                existingEntity.getDate(),
+                existingEntity.getCostPrice()
+        );
     }
 
     //Este metodo también lo vamos a tener oculto ya que la API. Por el momento el usuario no necesita saber si hay registros eliminados

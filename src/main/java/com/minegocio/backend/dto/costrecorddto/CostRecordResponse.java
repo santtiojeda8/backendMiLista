@@ -13,11 +13,16 @@ public class CostRecordResponse {
     public CostRecordResponse() {
     }
 
-    public CostRecordResponse(String nameProduct, String nameSupplier, LocalDate date, BigDecimal costPrice) {
+    public CostRecordResponse(UUID idCostRecord, String nameProduct, String nameSupplier, LocalDate date, BigDecimal costPrice) {
+        this.idCostRecord = idCostRecord;
         this.nameProduct = nameProduct;
         this.nameSupplier = nameSupplier;
         this.date = date;
         this.costPrice = costPrice;
+    }
+
+    public UUID getIdCostRecord() {
+        return idCostRecord;
     }
 
     public String getNameProduct() {
