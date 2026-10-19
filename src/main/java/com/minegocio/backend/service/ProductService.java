@@ -91,5 +91,13 @@ public class ProductService {
         return productRepository.existsByIdProductAndUserIdUser(id,idUser);
     }
 
+    @Transactional(readOnly = true)
+    public List<ProductResponse> searchByName (String name , UUID idUser){
+        return productRepository.findByNameContainingIgnoreCaseAndUserIdUser(name,idUser)
+                .stream()
+                .map(product -> new ProductResponse(product.getIdProduct(),product.getName(), product.getSalePrice()))
+                .toList();
+    }
+
 
 }

@@ -45,4 +45,11 @@ public class ProductController {
         return ResponseEntity.ok(productService.softDelete(idProduct, logedUser.getIdUser()));
     }
 
+    //Cambiar ruta
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductResponse>> searchByName (@RequestParam String name, @AuthenticationPrincipal User logedUser){
+        return ResponseEntity.ok(productService.searchByName(name, logedUser.getIdUser()));
+    }
+
+
 }

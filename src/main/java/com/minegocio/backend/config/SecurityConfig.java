@@ -4,6 +4,7 @@ import com.minegocio.backend.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,6 +15,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
@@ -47,6 +53,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, JwtAuthenticationFilter jwtAuthenticationFilter) {
         return httpSecurity
+                // Activamos CORS para que permita las peticiones que vienen de React
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 // 1. DESACTIVAR PROTECCIÓN CSRF
                 // Deshabilitamos Cross-Site Request Forgery porque está pensado para aplicaciones basadas en Cookies automáticas.
                 // Como nuestra API utilizará tokens JWT en las cabeceras, es inmune por naturaleza a este ataque.
@@ -87,6 +96,33 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration){
         return authenticationConfiguration.getAuthenticationManager();
     }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // Permitimos explícitamente el origen de tu frontend en Vite (puertos 5173/5174)
+        configuration.setAllowedOrigins(java.util.List.of(
+                "http://localhost:5174",
+                "http://localhost:5173"
+        ));
+
+        // Permitimos todos los métodos HTTP que vas a usar
+        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
+        // Permitimos todas las cabeceras (necesario para enviar el Header "Authorization" con el JWT)
+        configuration.setAllowedHeaders(java.util.List.of("*"));
+
+        // Permitimos el envío de credenciales o cookies si hiciera falta
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Aplicamos esta configuración a todas las rutas de la API
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+
 
 
 }
