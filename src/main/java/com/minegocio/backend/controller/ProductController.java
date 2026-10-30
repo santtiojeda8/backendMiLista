@@ -5,10 +5,11 @@ import com.minegocio.backend.dto.productdto.ProductResponse;
 import com.minegocio.backend.entity.User;
 import com.minegocio.backend.service.ProductService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,8 +22,8 @@ public class ProductController {
     }
 
     @GetMapping("/allProduct")
-    public ResponseEntity<List<ProductResponse>> getAllProducts (@AuthenticationPrincipal User logedUser){
-        return ResponseEntity.ok(productService.getAllActiveProduct(logedUser.getIdUser()));
+    public ResponseEntity<Page<ProductResponse>> getAllProducts (@AuthenticationPrincipal User logedUser,Pageable pageable){
+        return ResponseEntity.ok(productService.getAllActiveProduct(logedUser.getIdUser(), pageable));
     }
 
     @GetMapping("/{idProduct}")
@@ -47,8 +48,8 @@ public class ProductController {
 
     //Cambiar ruta
     @GetMapping("/search")
-    public ResponseEntity<List<ProductResponse>> searchByName (@RequestParam String name, @AuthenticationPrincipal User logedUser){
-        return ResponseEntity.ok(productService.searchByName(name, logedUser.getIdUser()));
+    public ResponseEntity<Page<ProductResponse>> searchByName (@RequestParam String name, @AuthenticationPrincipal User logedUser, Pageable pageable){
+        return ResponseEntity.ok(productService.searchByName(name, logedUser.getIdUser(), pageable ));
     }
 
 

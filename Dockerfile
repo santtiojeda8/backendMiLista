@@ -13,3 +13,7 @@ EXPOSE 8080
 
 # Comando para ejecutar la aplicación cuando encienda el contenedor
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
+#Comando para armar el archivo .jar para docker y ejecutar el docker.compose.yaml para armar el contenedor
+#   mvn clean packahe -DskipTests
+#   docker compose up -d --build

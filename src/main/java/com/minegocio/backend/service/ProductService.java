@@ -5,6 +5,8 @@ import com.minegocio.backend.dto.productdto.ProductResponse;
 import com.minegocio.backend.entity.Product;
 import com.minegocio.backend.exception.ResourceNotFoundException;
 import com.minegocio.backend.repository.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +25,13 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductResponse> getAllActiveProduct (UUID idUser){
-        return productRepository.findByUserIdUserAndActiveTrue(idUser)
-                .stream()
-                .map(product -> new ProductResponse(product.getIdProduct(),product.getName(), product.getSalePrice()))
-                .toList();
+    public Page<ProductResponse> getAllActiveProduct (UUID idUser, Pageable pageable){
+        return productRepository.findByUserIdUserAndActiveTrue(idUser,pageable)
+                .map(product -> new ProductResponse(
+                        product.getIdProduct(),
+                        product.getName(),
+                        product.getSalePrice()
+                ));
     }
 
     @Transactional
@@ -92,11 +96,13 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductResponse> searchByName (String name , UUID idUser){
-        return productRepository.findByNameContainingIgnoreCaseAndUserIdUser(name,idUser)
-                .stream()
-                .map(product -> new ProductResponse(product.getIdProduct(),product.getName(), product.getSalePrice()))
-                .toList();
+    public Page<ProductResponse> searchByName (String name , UUID idUser, Pageable pageable){
+        return productRepository.findByNameContainingIgnoreCaseAndUserIdUserAndActiveTrue(name,idUser,pageable)
+                .map(product -> new ProductResponse(
+                        product.getIdProduct(),
+                        product.getName(),
+                        product.getSalePrice()
+                ));
     }
 
 
