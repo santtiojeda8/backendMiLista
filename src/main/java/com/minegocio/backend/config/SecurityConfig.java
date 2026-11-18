@@ -104,7 +104,8 @@ public class SecurityConfig {
         // Permitimos explícitamente el origen de tu frontend en Vite (puertos 5173/5174)
         configuration.setAllowedOrigins(java.util.List.of(
                 "http://localhost:5174",
-                "http://localhost:5173"
+                "http://localhost:5173",
+                "https://front-mi-lista.vercel.app"
         ));
 
         // Permitimos todos los métodos HTTP que vas a usar
