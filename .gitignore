@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/1
+
+##Archivo con variables de entorno
+entorn.txt
