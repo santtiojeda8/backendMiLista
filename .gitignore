@@ -30,7 +30,4 @@ build/
 !**/src/test/**/build/
 
 ### VS Code ###
-.vscode/
-
-# Ignorar configuraciones locales con secretos reales
-src/main/resources/application.properties
+.vscode/1
